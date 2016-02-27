@@ -26,7 +26,7 @@
                          :verbose true}
               }]}
   
-  :ring {:handler diary.core/handler
-         :nrepl {:start? true :port 4000}}
+  :figwheel {:ring-handler diary.core/handler
+             :nrepl-port 4000 }
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
