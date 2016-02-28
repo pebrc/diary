@@ -4,7 +4,10 @@
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [defroutes ANY]]
             [compojure.coercions :refer [as-int]]
-            [diary.datomic :as db]))
+            [diary.datomic :as db]
+            [diary.middleware :refer [wrap-transit-body
+                                      wrap-transit-response
+                                      wrap-transit-params]]))
 
 
 (defn parse-body [req key]
@@ -14,14 +17,14 @@
 
 
 (def common-properties
-  {:available-media-types ["application/json"]})
+  {:available-media-types ["application/transit+json"]})
 
 (defresource entry [id]
   common-properties
   :allowed-methods [:get :put]
   :exists? (fn [_] (let [e (db/by-id id)]
                     (if-not (= 1 (count e))
-                      {::entry e})))
+                      {::entry {:entries/list [e]}})))
   :malformed? #(parse-body % ::data)
   :handle-ok ::entry
   :can-put-to-missing? false
@@ -33,10 +36,11 @@
   :allowed-methods [:get :post]
   :post-redirect? (fn [ctx] {:location (format  "/entries/%s" (::id ctx))})
   :post! (fn [ctx]
-           (let [body (slurp (get-in ctx [:request :body]))
-                 res (db/create {:diary.entry/text body})]
+           (let [body (get-in ctx [:request :body])
+                 _ (println body)
+                 res (db/create {:diary.entry/text (:text (second (first body)))})]
              {::id (:id res)}))
-  :handle-ok (prn-str (into [] (db/list-entries))))
+  :handle-ok {:entries/list (into [] (db/list-entries))})
 
 
 (defroutes app
@@ -44,5 +48,7 @@
   (ANY "/entries" [] entry-list))
 
 (def handler 
-  (-> app 
+  (-> app
+      (wrap-transit-body)
+      (wrap-transit-response)
       (wrap-trace :header :ui)))

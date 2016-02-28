@@ -4,29 +4,34 @@
             [goog.log :as glog]
             [goog.debug :as debug]
             [om.next :as om :refer-macros [defui]]
-            [om.dom :as dom])
+            [om.dom :as dom]
+            [cognitect.transit :as t])
   (:import [goog.net XhrIo]))
 
 
+(defn handle-response [cb]
+  (fn [e]
+    (let [res (.. e -target)]
+      (if (.isSuccess res)
+        (cb (t/read (t/reader :json) (.getResponseText res)))
+        (cb {:app/title (.getResponseText res)})))))
+
 (defn api-post [url]
   (fn [{:keys [remote] :as ctx} cb]
-    (.send XhrIo url
-           (fn [e]
-             (print (.getResponseText (.. e -target)))
-             (cb {:entries/list [{:date (js/Date.) :text "posted"}]}))
-           "POST" remote
-           #js {"Content-Type" "application/json"})))
-
+    (let [cmd (ffirst remote)
+          verb (case cmd
+                 entry/create "POST"
+                 entries/list "GET"
+                 "GET")]
+      (.send XhrIo url
+             (handle-response cb)
+             verb (t/write (t/writer :json) remote)
+             #js {"Content-Type" "application/transit+json"}))))
 
 (def app-state
   (atom
     {:app/title "Diary"
-     :entries/list
-     [{:date #inst "2015-11-21T00:00" :text "yadda yadda"}
-      {:date #inst "2015-11-23T00:00" :text "yadda yadda"}
-      {:date #inst "2015-11-24T00:00" :text "yadda yadda"}
-      {:date #inst "2015-11-25T00:00" :text "yadda yadda"}
-      {:date #inst "2015-11-28T00:00" :text "yadda yadda"}]}))
+     :entries/list []}))
 
 (def ESCAPE_KEY 27)
 (def ENTER_KEY 13)
@@ -60,9 +65,6 @@
   [{:keys [state]} _  new-entry]
   {:value [:entries/list]
    :remote true
-   :action 
-   (fn []
-     (swap! state update-in [:entries/list] conj new-entry))
    })
 
 (defmulti read (fn [env key params] key))
@@ -77,7 +79,8 @@
 (defmethod read :entries/list
   [{:keys [state] :as env} key {:keys [start end]}]
   (let [entries (:entries/list @state)]
-    {:value (subvec entries start (min end (count entries)))}))
+    {:remote true
+     :value (subvec entries start (min end (count entries)))}))
 
 (defui Diary
   static om/IQueryParams
@@ -94,8 +97,8 @@
         (dom/h2 nil title)
         (apply dom/ul nil
           (map
-            (fn [{:keys [date text]}]
-              (dom/li nil (str date ": " text)))
+            (fn [{:keys [db/id diary.entry/text]}]
+              (dom/li nil (str id ": " text)))
             list))
         (dom/input #js {:ref "new-entry-input"
                         :id "new-entry"

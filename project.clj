@@ -10,6 +10,8 @@
   :dependencies [[org.clojure/clojure "1.8.0-RC2"]
                  [org.clojure/clojurescript "1.7.170"]
                  [com.datomic/datomic-free "0.9.5327" :exclusions [joda-time]]
+                 [com.cognitect/transit-clj "0.8.285"]
+                 [com.cognitect/transit-cljs "0.8.237"]
                  [org.omcljs/om "1.0.0-alpha22"]
                  [liberator "0.14.0"]
                  [compojure "1.4.0"]
