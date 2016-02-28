@@ -2,7 +2,7 @@
 
   :min-lein-version "2.5.3"
   :plugins [[lein-ring "0.9.7"]
-            [lein-figwheel "0.5.0-1"]]
+            [lein-figwheel "0.5.0-5"]]
   :description "A simple diary application"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -29,4 +29,7 @@
   :figwheel {:ring-handler diary.core/handler
              :nrepl-port 4000 }
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}
+             :dev {:dependencies [[figwheel-sidecar "0.5.0-1"]
+                                  [com.cemerick/piggieback "0.2.1"]]}}
+   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]})
