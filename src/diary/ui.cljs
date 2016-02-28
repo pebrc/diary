@@ -1,8 +1,21 @@
 (ns diary.ui
   (:require [clojure.string :as string]
             [goog.dom :as gdom]
+            [goog.log :as glog]
+            [goog.debug :as debug]
             [om.next :as om :refer-macros [defui]]
-            [om.dom :as dom]))
+            [om.dom :as dom])
+  (:import [goog.net XhrIo]))
+
+
+(defn api-post [url]
+  (fn [{:keys [remote] :as ctx} cb]
+    (.send XhrIo url
+           (fn [e]
+             (print (.getResponseText (.. e -target)))
+             (cb {:entries/list [{:date (js/Date.) :text "posted"}]}))
+           "POST" remote
+           #js {"Content-Type" "application/json"})))
 
 
 (def app-state
@@ -23,7 +36,7 @@
   (let [edited-text (string/trim (or (om/get-state c :edit-text) ""))
         submit-id (or id :temp)
         now (js/Date.)]
-    (om/transact! c `[(entry/create {:date ~now :text ~edited-text})])))
+    (om/transact! c `[(entry/create {:date ~now :text ~edited-text})] )))
 
 (defn keydown [c props e]
   (condp == (.-keyCode e)
@@ -40,12 +53,13 @@
 
 (defmethod mutate :default
   [env key params]
-  (print key)
-  {})
+  {:remote true
+   :value [:entries/list]})
 
 (defmethod mutate 'entry/create
   [{:keys [state]} _  new-entry]
   {:value [:entries/list]
+   :remote true
    :action 
    (fn []
      (swap! state update-in [:entries/list] conj new-entry))
@@ -92,9 +106,16 @@
 
 (def reconciler
   (om/reconciler
-    {:state app-state
-     :parser (om/parser {:read read
+   {:state app-state
+    :send (api-post "http://localhost:3449/entries")
+    :parser (om/parser {:read read
                          :mutate mutate})}))
+
+(defn log-state-change [k r old new]
+  (print new))
+
+(add-watch app-state :debug-watch log-state-change)
+
 
 (om/add-root! reconciler
   Diary (gdom/getElement "app"))

@@ -29,7 +29,8 @@
   (d/transact conn [entry]))
 
 (defn create [entry]
-  (upsert (assoc entry :db/id (d/tempid :db.part/user))))
+  (let [ res @(upsert (assoc entry :db/id (d/tempid :db.part/user)))]
+    {:id  (val (first (:tempids res)))}))
 
 
 (defn by-id [id]

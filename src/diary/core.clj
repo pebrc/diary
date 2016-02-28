@@ -8,8 +8,9 @@
 
 
 (defn parse-body [req key]
-  (let [body (slurp (get-in req [:request :body]))]
-    [false {key body}]))
+  (if-let [body (get-in req [:request :body])]
+    [false {key (slurp body)}]
+    [false]))
 
 
 (def common-properties
@@ -30,9 +31,11 @@
 (defresource entry-list
   common-properties
   :allowed-methods [:get :post]
+  :post-redirect? (fn [ctx] {:location (format  "/entries/%s" (::id ctx))})
   :post! (fn [ctx]
-           (let [body (slurp (get-in ctx [:request :body]))]
-             @(db/create {:diary.entry/text body})))
+           (let [body (slurp (get-in ctx [:request :body]))
+                 res (db/create {:diary.entry/text body})]
+             {::id (:id res)}))
   :handle-ok (prn-str (into [] (db/list-entries))))
 
 
@@ -42,6 +45,4 @@
 
 (def handler 
   (-> app 
-      (wrap-trace :header :ui) ))
-
-
+      (wrap-trace :header :ui)))
