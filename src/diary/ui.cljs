@@ -18,15 +18,10 @@
 
 (defn api-post [url]
   (fn [{:keys [remote] :as ctx} cb]
-    (let [cmd (ffirst remote)
-          verb (case cmd
-                 entry/create "POST"
-                 entries/list "GET"
-                 "GET")]
-      (.send XhrIo url
-             (handle-response cb)
-             verb (t/write (t/writer :json) remote)
-             #js {"Content-Type" "application/transit+json"}))))
+    (.send XhrIo url
+           (handle-response cb)
+           "POST" (t/write (t/writer :json) remote)
+           #js {"Content-Type" "application/transit+json"})))
 
 (def app-state
   (atom
@@ -41,7 +36,7 @@
   (let [edited-text (string/trim (or (om/get-state c :edit-text) ""))
         submit-id (or id :temp)
         now (js/Date.)]
-    (om/transact! c `[(entry/create {:date ~now :text ~edited-text})] )))
+    (om/transact! c `[(entry/create {:diary.entry/text ~edited-text}) :entries/list])))
 
 (defn keydown [c props e]
   (condp == (.-keyCode e)
@@ -63,9 +58,7 @@
 
 (defmethod mutate 'entry/create
   [{:keys [state]} _  new-entry]
-  {:value [:entries/list]
-   :remote true
-   })
+  {:remote true})
 
 (defmulti read (fn [env key params] key))
 
@@ -80,15 +73,28 @@
   [{:keys [state] :as env} key {:keys [start end]}]
   (let [entries (:entries/list @state)]
     {:remote true
-     :value (subvec entries start (min end (count entries)))}))
+     :value entries}))
 
-(defui Diary
-  static om/IQueryParams
-  (params [this]
-    {:start 0 :end 100})
+(defui Entry
+  static om/Ident
+  (ident [this {:keys [db/id]}]
+         [:entries/by-id id])
   static om/IQuery
   (query [this]
-    '[:app/title (:entries/list {:start ?start :end ?end})])
+         '[:db/id :diary.entry/text])
+  Object
+  (render [this]
+          (let [props (om/props this)
+                {:keys [db/id diary.entry/text]} props]
+            (dom/li nil (str id ": " text))
+            )))
+
+(def item (om/factory Entry {:keyfn :db/id}))
+
+(defui Diary
+  static om/IQuery
+  (query [this]
+         `[:app/title {:entries/list ~(om/get-query Entry)} ])
   Object
   (render [this]
           (let [props (om/props this)
@@ -96,10 +102,7 @@
       (dom/div nil
         (dom/h2 nil title)
         (apply dom/ul nil
-          (map
-            (fn [{:keys [db/id diary.entry/text]}]
-              (dom/li nil (str id ": " text)))
-            list))
+          (map item list))
         (dom/input #js {:ref "new-entry-input"
                         :id "new-entry"
                         :placeholder "What happened today?"
@@ -110,7 +113,7 @@
 (def reconciler
   (om/reconciler
    {:state app-state
-    :send (api-post "http://localhost:3449/entries")
+    :send (api-post "http://localhost:3449/api")
     :parser (om/parser {:read read
                          :mutate mutate})}))
 

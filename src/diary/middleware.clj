@@ -21,8 +21,7 @@
   (let [[res t] (transit-request? request)]
     (if res
       (if-let [body (:body request)]
-        (let [rdr (transit/reader body t opts)
-              _  (println (.available body))]
+        (let [rdr (transit/reader body t opts)]
           (try
             [true (transit/read rdr)]
             (catch Exception ex

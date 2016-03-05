@@ -29,8 +29,9 @@
   (d/transact conn [entry]))
 
 (defn create [entry]
-  (let [ res @(upsert (assoc entry :db/id (d/tempid :db.part/user)))]
-    {:id  (val (first (:tempids res)))}))
+  (let [ res @(upsert (assoc entry :db/id (d/tempid :db.part/user)))
+        _ (println res)]
+    res))
 
 
 (defn by-id [id]
@@ -40,4 +41,5 @@
   (let [db (d/db conn)]
     (->>  (d/q '[:find [?id ...]
                 :where [?id :diary.entry/text]] (d/db conn))
-          (map by-id))))
+          (map by-id)
+          (vec))))
