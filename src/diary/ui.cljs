@@ -36,7 +36,7 @@
   (let [edited-text (string/trim (or (om/get-state c :edit-text) ""))
         submit-id (or id :temp)
         now (js/Date.)]
-    (om/transact! c `[(entry/create {:diary.entry/text ~edited-text}) :entries/list])))
+    (om/transact! c `[(entry/create {:diary.entry/text ~edited-text :diary.entry/date ~now}) :entries/list])))
 
 (defn keydown [c props e]
   (condp == (.-keyCode e)
@@ -85,8 +85,8 @@
   Object
   (render [this]
           (let [props (om/props this)
-                {:keys [db/id diary.entry/text]} props]
-            (dom/li nil (str id ": " text))
+                {:keys [diary.entry/date diary.entry/text]} props]
+            (dom/li nil (str date ": " text))
             )))
 
 (def item (om/factory Entry {:keyfn :db/id}))
