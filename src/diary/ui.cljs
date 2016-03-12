@@ -5,7 +5,8 @@
             [goog.debug :as debug]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [cognitect.transit :as t])
+            [cognitect.transit :as t]
+            [diary.ui.util :as u])
   (:import [goog.net XhrIo]))
 
 
@@ -86,7 +87,7 @@
   (render [this]
           (let [props (om/props this)
                 {:keys [diary.entry/date diary.entry/text]} props]
-            (dom/li nil (str date ": " text))
+            (dom/li nil (str (u/format-date "EEEE HH:mm"  date) ": " text))
             )))
 
 (def item (om/factory Entry {:keyfn :db/id}))
