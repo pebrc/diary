@@ -6,7 +6,8 @@
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [cognitect.transit :as t]
-            [diary.ui.util :as u])
+            [diary.ui.entry :as e]
+            [diary.ui.parser :as p])
   (:import [goog.net XhrIo]))
 
 (enable-console-print!)
@@ -40,8 +41,7 @@
         now (js/Date.)]
     (om/transact! c `[(entry/create {:diary.entry/text ~edited-text :diary.entry/date ~now}) :entries/list])))
 
-(defn edit [c {:keys [db/id] :as props}]
-  (om/transact! c `[(entry/edit {:db/id ~id})]))
+
 
 (defn keydown [c props e]
   (condp == (.-keyCode e)
@@ -54,86 +54,12 @@
 (defn change [c e]
   (om/update-state! c assoc :edit-text (.. e -target -value)))
 
-(defmulti mutate om/dispatch)
 
-(defmethod mutate :default
-  [env key params]
-  {:remote true
-   :value [:entries/list]})
-
-(defmethod mutate 'entry/create
-  [{:keys [state]} _  new-entry]
-  {:remote true})
-
-(defmethod mutate 'entry/edit
-  [{:keys [state]} _ {:keys [db/id]}]
-  {:action
-   (fn []
-     (swap! state assoc :entry/editing [:entries/by-id id]))})
-
-
-
-(defn join [st ref]
-  (cond-> (get-in st ref)
-    (= (:entry/editing st) ref) (assoc :entry/editing true)))
-
-(defn get-entries [state key]
-  (let [st @state]
-    (into [] (map #(join st %)) (get st key))))
-
-
-
-(defmulti read (fn [env key params] key))
-
-(defmethod read :default
-  [{:keys [state] :as env} key params]
-  (let [st @state]
-    (if-let [[_ value] (find st key)]
-      {:value value}
-      {:value :not-found})))
-
-(defmethod read :entries/list
-  [{:keys [state] :as env} key {:keys [start end]}]
-  (let [entries (get-entries state key)]
-    {:remote true
-     :value entries}))
-
-(defn reader-view [c {:keys [diary.entry/text] :as props}]
-  (dom/div #js {:className "view"
-                :onDoubleClick (fn [e] (edit c props))}
-                         text))
-
-(defn edit-field [c props]
-  (dom/input
-   #js {:value (om/get-state c :edit-text)
-        :className "edit"}))
-
-(defui Entry
-  static om/Ident
-  (ident [this {:keys [db/id]}]
-         [:entries/by-id id])
-  static om/IQuery
-  (query [this]
-         [:db/id :diary.entry/text :entry/editing])
-  Object
-  (render [this]
-          (let [props (om/props this)
-                {:keys [diary.entry/date entry/editing]} props
-                _ (print props)
-                class (cond-> ""
-                        editing (str "editing"))]
-            (dom/li #js{:className class}
-                    (dom/h2 nil  (str (u/format-date "EEEE HH:mm"  date) ":"))
-                    (reader-view this props)
-                    (edit-field this props))
-            )))
-
-(def item (om/factory Entry {:keyfn :db/id}))
 
 (defui Diary
   static om/IQuery
   (query [this]
-         `[:app/title {:entries/list ~(om/get-query Entry)} ])
+         `[:app/title {:entries/list ~(om/get-query e/Entry)} ])
   Object
   (render [this]
           (let [props (om/props this)
@@ -141,7 +67,7 @@
       (dom/div nil
         (dom/h1 nil title)
         (apply dom/ul #js{:id "entries"}
-          (map item list))
+          (map e/item list))
         (dom/input #js {:ref "new-entry-input"
                         :id "new-entry"
                         :placeholder "What happened today?"
@@ -154,8 +80,8 @@
    {:state app-state
     :normalize true
     :send (api-post "http://localhost:3449/api")
-    :parser (om/parser {:read read
-                         :mutate mutate})}))
+    :parser (om/parser {:read p/read
+                         :mutate p/mutate})}))
 
 (defn log-state-change [k r old new]
   (print new))
