@@ -24,20 +24,23 @@ body {
 	            0 25px 50px 0 rgba(0, 0, 0, 0.1);
 }
 
-#app input::-moz-input-placeholder {
+#app textarea::-moz-placeholder {
 	font-style: italic;
-	font-weight: 300;
+	font-weight: 400;
+        font-size: 1em;
 	color: #e6e6e6;
 }
 
-#app input::-webkit-input-placeholder {
+#app textarea::-webkit-input-placeholder {
 	font-style: italic;
-	font-weight: 300;
+	font-weight: 400;
+        font-size: 1em;
 	color: #e6e6e6;
 }
-#app input::input-placeholder {
+#app textarea::input-placeholder {
 	font-style: italic;
-	font-weight: 300;
+	font-weight: 400;
+        font-size: 1em;
 	color: #e6e6e6;
 }
 
@@ -52,6 +55,17 @@ body {
 	-webkit-text-rendering: optimizeLegibility;
 	-moz-text-rendering: optimizeLegibility;
 	text-rendering: optimizeLegibility;
+}
+
+#new-entry {
+    font:inherit;
+    font-size:2em;
+    line-height:normal;
+    border-bottom: 1px solid #ededed;
+    border-top: none;
+    border-left: none;
+    border-right:none;
+    width:99%;
 }
 
 #entries {
@@ -94,7 +108,7 @@ body {
     display: block;
 }
 
-#entries li textarea{
+#entries li textarea {
     width: 100%;
     font: inherit;
     font-size:smaller;

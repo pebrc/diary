@@ -65,15 +65,17 @@
           (let [props (om/props this)
                 {:keys [app/title entries/list]} props]
       (dom/div nil
-        (dom/h1 nil title)
-        (apply dom/ul #js{:id "entries"}
-          (map e/item list))
-        (dom/input #js {:ref "new-entry-input"
-                        :id "new-entry"
-                        :placeholder "What happened today?"
-                        :value (om/get-state this :edit-text)
-                        :onChange #(change this %)
-                        :onKeyDown #(keydown this props %)})))))
+               (dom/h1 nil title)
+               (dom/textarea
+                #js {:ref "new-entry-input"
+                     :id "new-entry"
+                     :placeholder "What happened today?"
+                     :value (om/get-state this :edit-text)
+                     :onChange #(change this %)
+                     :onKeyDown #(keydown this props %)
+                     :rows 10})
+               (apply dom/ul #js{:id "entries"}
+                      (map e/item list))))))
 
 (def reconciler
   (om/reconciler
