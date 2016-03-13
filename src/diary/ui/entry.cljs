@@ -49,15 +49,16 @@
            text))
 
 (defn edit-field [c props]
-  (dom/textarea
-   #js {:value (om/get-state c :edit-text)
-        :className "edit"
-        :ref "editField"
-        :onKeyDown #(key-down c props %)
-        :onKeyUp #(print (.-keyCode %))
-        :onBlur #(submit c props %)
-        :onChange #(change c %)
-        }))
+  (dom/div #js{:className "edit"}
+           (dom/textarea
+            #js {:value (om/get-state c :edit-text) 
+                 :ref "editField"
+                 :rows 10
+                 :onKeyDown #(key-down c props %)
+                 :onKeyUp #(print (.-keyCode %))
+                 :onBlur #(submit c props %)
+                 :onChange #(change c %)
+                 })))
 
 (defui Entry
   static om/Ident

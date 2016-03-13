@@ -92,11 +92,15 @@ body {
 
 #entries li.editing .edit {
     display: block;
+}
+
+#entries li textarea{
     width: 100%;
     font: inherit;
     font-size:smaller;
-}
+    line-height:normal;
 
+}
 #entries li.editing .view {
     display:none;
 }
