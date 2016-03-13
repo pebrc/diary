@@ -84,7 +84,8 @@
                          :mutate p/mutate})}))
 
 (defn log-state-change [k r old new]
-  (print new))
+  ;;(print new)
+  )
 
 (add-watch app-state :debug-watch log-state-change)
 

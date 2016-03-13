@@ -1,6 +1,7 @@
 (ns diary.ui.parser
   (:require [om.next :as om]))
 
+;; ========== MUTATIONS ========
 (defmulti mutate om/dispatch)
 
 (defmethod mutate :default
@@ -18,8 +19,22 @@
    (fn []
      (swap! state assoc :entry/editing [:entries/by-id id]))})
 
+(defmethod mutate 'entry/cancel-edit
+  [{:keys [state]} _ _]
+  {:action
+   (fn []
+     (swap! state dissoc :entry/editing))})
 
+(defmethod mutate 'entry/update
+  [{:keys [state ref]} _  new-props]
+  {:remote true
+   :action ;; Optimisitc update as in todo mvc
+   (fn []
+     (let [_ (print (str "ref: " ref "new: " new-props))]
+       (swap! state update-in ref merge new-props)))
+   })
 
+;;=========READS ===============
 (defn join [st ref]
   (cond-> (get-in st ref)
     (= (:entry/editing st) ref) (assoc :entry/editing true)))

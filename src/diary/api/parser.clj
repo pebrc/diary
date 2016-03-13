@@ -28,3 +28,8 @@
   (let [_ (println entry)]
     {:value {:keys [[:entries/list]]}
      :action (fn [] (d/create entry))}))
+
+(defmethod mutatefn 'entry/update
+  [_ k {:keys [db/id] :as entry}]
+  {:value {:keys [[:entries/by-id id]]}
+   :action (fn [] (d/upsert entry))})

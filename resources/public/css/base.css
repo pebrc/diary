@@ -93,6 +93,8 @@ body {
 #entries li.editing .edit {
     display: block;
     width: 100%;
+    font: inherit;
+    font-size:smaller;
 }
 
 #entries li.editing .view {
