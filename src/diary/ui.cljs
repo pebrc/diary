@@ -9,6 +9,7 @@
             [diary.ui.util :as u])
   (:import [goog.net XhrIo]))
 
+(enable-console-print!)
 
 (defn handle-response [cb]
   (fn [e]
@@ -39,6 +40,9 @@
         now (js/Date.)]
     (om/transact! c `[(entry/create {:diary.entry/text ~edited-text :diary.entry/date ~now}) :entries/list])))
 
+(defn edit [c {:keys [db/id] :as props}]
+  (om/transact! c `[(entry/edit {:db/id ~id})]))
+
 (defn keydown [c props e]
   (condp == (.-keyCode e)
     ESCAPE_KEY  (do
@@ -61,6 +65,24 @@
   [{:keys [state]} _  new-entry]
   {:remote true})
 
+(defmethod mutate 'entry/edit
+  [{:keys [state]} _ {:keys [db/id]}]
+  {:action
+   (fn []
+     (swap! state assoc :entry/editing [:entries/by-id id]))})
+
+
+
+(defn join [st ref]
+  (cond-> (get-in st ref)
+    (= (:entry/editing st) ref) (assoc :entry/editing true)))
+
+(defn get-entries [state key]
+  (let [st @state]
+    (into [] (map #(join st %)) (get st key))))
+
+
+
 (defmulti read (fn [env key params] key))
 
 (defmethod read :default
@@ -72,9 +94,19 @@
 
 (defmethod read :entries/list
   [{:keys [state] :as env} key {:keys [start end]}]
-  (let [entries (:entries/list @state)]
+  (let [entries (get-entries state key)]
     {:remote true
      :value entries}))
+
+(defn reader-view [c {:keys [diary.entry/text] :as props}]
+  (dom/div #js {:className "view"
+                :onDoubleClick (fn [e] (edit c props))}
+                         text))
+
+(defn edit-field [c props]
+  (dom/input
+   #js {:value (om/get-state c :edit-text)
+        :className "edit"}))
 
 (defui Entry
   static om/Ident
@@ -82,12 +114,18 @@
          [:entries/by-id id])
   static om/IQuery
   (query [this]
-         '[:db/id :diary.entry/text])
+         [:db/id :diary.entry/text :entry/editing])
   Object
   (render [this]
           (let [props (om/props this)
-                {:keys [diary.entry/date diary.entry/text]} props]
-            (dom/li nil (str (u/format-date "EEEE HH:mm"  date) ": " text))
+                {:keys [diary.entry/date entry/editing]} props
+                _ (print props)
+                class (cond-> ""
+                        editing (str "editing"))]
+            (dom/li #js{:className class}
+                    (dom/h2 nil  (str (u/format-date "EEEE HH:mm"  date) ":"))
+                    (reader-view this props)
+                    (edit-field this props))
             )))
 
 (def item (om/factory Entry {:keyfn :db/id}))
@@ -101,8 +139,8 @@
           (let [props (om/props this)
                 {:keys [app/title entries/list]} props]
       (dom/div nil
-        (dom/h2 nil title)
-        (apply dom/ul nil
+        (dom/h1 nil title)
+        (apply dom/ul #js{:id "entries"}
           (map item list))
         (dom/input #js {:ref "new-entry-input"
                         :id "new-entry"
@@ -114,6 +152,7 @@
 (def reconciler
   (om/reconciler
    {:state app-state
+    :normalize true
     :send (api-post "http://localhost:3449/api")
     :parser (om/parser {:read read
                          :mutate mutate})}))
@@ -127,5 +166,5 @@
 (om/add-root! reconciler
   Diary (gdom/getElement "app"))
 
-(enable-console-print!)
+
 
