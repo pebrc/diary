@@ -23,8 +23,8 @@
     (doto e (.preventDefault) (.stopPropagation))))
 
 (defn edit [c {:keys [db/id diary.entry/text] :as props}]
-  (om/transact! c `[(entry/edit {:db/id ~id})])
-  (om/update-state! c merge {:need-focus true :edit-text text}))
+  (om/transact! c `[(entry/edit {:db/id ~id}) :entries/list])
+  (om/update-state! c merge { :edit-text text}))
 
 (defn change [c e]
   (om/update-state! c assoc
@@ -67,14 +67,7 @@
   (query [this]
          [:db/id :diary.entry/text :entry/editing])
   Object
-  (componentDidUpdate [this prev-props prev-state]
-    (when (and (:entry/editing (om/props this))
-               (om/get-state this :needs-focus))
-      (let [node (dom/node this "editField")
-            len  (.. node -value -length)]
-        (.focus node)
-        (.setSelectionRange node len len))
-      (om/update-state! this assoc :needs-focus nil)))
+  
   (render [this]
           (let [props (om/props this)
                 {:keys [diary.entry/date entry/editing]} props
