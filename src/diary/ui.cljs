@@ -39,7 +39,9 @@
   (let [edited-text (string/trim (or (om/get-state c :edit-text) ""))
         submit-id (or id :temp)
         now (js/Date.)]
-    (om/transact! c `[(entry/create {:diary.entry/text ~edited-text :diary.entry/date ~now}) :entries/list])))
+    (om/update-state! c assoc :edit-text "")
+    (om/transact! c `[(entry/create {:diary.entry/text ~edited-text :diary.entry/date ~now}) :entries/list])
+    (doto e (.preventDefault) (.stopPropagation))))
 
 
 
