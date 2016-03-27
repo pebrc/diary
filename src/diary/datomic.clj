@@ -1,19 +1,12 @@
 (ns diary.datomic
   (:require [datomic.api :as d]
-            [com.stuartsierra.component :as component]))
+            [com.stuartsierra.component :as component]
+            [clojure.java.io :as io])
+  (:import datomic.Util))
 
 
 (def schema
-  [{:db/id (d/tempid :db.part/db)
-    :db/ident :diary.entry/text
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :db.install/_attribute :db.part/db}
-   {:db/id (d/tempid :db.part/db)
-    :db/ident :diary.entry/date
-    :db/valueType :db.type/instant
-    :db/cardinality :db.cardinality/one
-    :db.install/_attribute :db.part/db}])
+  )
 
 
 
@@ -49,6 +42,6 @@
 (defn new-database [db-uri]
   (DatomicDatabase.
    db-uri
-   schema
+   (first (Util/readAll (io/reader (io/resource "data/schema.edn"))))
    []
    nil))
