@@ -1,5 +1,6 @@
 (ns diary.datomic
-  (:require [datomic.api :as d]))
+  (:require [datomic.api :as d]
+            [com.stuartsierra.component :as component]))
 
 (def db-uri "datomic:mem://diary")
 
@@ -43,3 +44,19 @@
                 :where [?id :diary.entry/text]] (d/db conn))
           (map by-id)
           (vec))))
+
+(defrecord DatomicDatabase [uri schema initial-data connection]
+  component/Lifecycle
+  (start [component]
+    (d/create-database uri)
+    (let [c (d/connect uri)]
+      @(d/transact c schema)
+      (assoc component :connection c)))
+  (stop [component]))
+
+(defn new-database [db-uri]
+  (DatomicDatabase.
+   db-uri
+   schema
+   []
+   nil))

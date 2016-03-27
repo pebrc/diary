@@ -45,14 +45,14 @@
 
 
 
+
 (defn keydown [c props e]
-  (let [keycode (.-keyCode e)]
-    (cond 
-      (= keycode ESCAPE_KEY)  (do
-                         (om/update-state! c assoc :edit-text "")
-                         (doto e (.preventDefault) (.stopPropagation)))
-      (and (= keycode  ENTER_KEY) (.-shiftKey e)) (submit c props e) 
-      :else nil)))
+  (condp every? [(.-keyCode e) (.-shiftKey e)]  
+    #{ESCAPE_KEY false}  (do
+                     (om/update-state! c assoc :edit-text "")
+                     (doto e (.preventDefault) (.stopPropagation)))
+    #{ENTER_KEY true} (submit c props e) 
+    nil))
 
 (defn change [c e]
   (om/update-state! c assoc :edit-text (.. e -target -value)))

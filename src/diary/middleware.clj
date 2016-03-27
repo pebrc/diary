@@ -1,6 +1,5 @@
 (ns diary.middleware
   (:require [ring.util.response :refer :all]
-            [liberator.representation :refer [render-map-generic]]
             [cognitect.transit :as transit])
   (:import [java.io ByteArrayOutputStream]))
 
@@ -13,7 +12,7 @@
     ret))
 
 (defn- transit-request? [request]
-  (if-let [content-type (:content-type request)]
+  (if-let [content-type (get-in request [:headers "content-type"] )]
     (let [mtch (re-find #"^application/transit\+(json|msgpack)" content-type)]
       [(not (empty? mtch)) (keyword (second mtch))])))
 
@@ -95,6 +94,3 @@ default-malformed-response
               transit-response
               (content-type transit-response (format "application/transit+%s; charset=utf-8" (name encoding)))))
           response)))))
-
-(defmethod render-map-generic "application/transit+json" [data context]
-  (write data :json {}) )

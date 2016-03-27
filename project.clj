@@ -2,7 +2,8 @@
 
   :min-lein-version "2.5.3"
   :plugins [[lein-ring "0.9.7"]
-            [lein-figwheel "0.5.0-5"]]
+            [lein-figwheel "0.5.0-5"]
+            [lein-cljsbuild "1.1.3"]]
   :description "A simple diary application"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -13,25 +14,25 @@
                  [com.cognitect/transit-clj "0.8.285"]
                  [com.cognitect/transit-cljs "0.8.237"]
                  [org.omcljs/om "1.0.0-alpha22"]
-                 [liberator "0.14.0"]
+                 [com.stuartsierra/component "0.3.1"]
+                 [aleph "0.4.1-beta4"]
                  [compojure "1.4.0"]
                  [ring/ring-core "1.4.0"]]
   :clean-targets [:target-path "out"]
   :cljsbuild {
-    :builds [{:id "dev"
+    :builds [{
               :source-paths ["src"]
-              :figwheel true
+              :figwheel false
               :compiler {:main "diary.ui"
                          :asset-path "js"
                          :output-to "resources/public/js/main.js"
                          :output-dir "resources/public/js"
-                         :verbose true}
+                         :optimizations :whitespace
+                         :pretty-print true}
               }]}
   
-  :figwheel {:ring-handler diary.api.server/handler
-             :nrepl-port 4000 }
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
              :dev {:dependencies [[figwheel-sidecar "0.5.0-1"]
                                   [com.cemerick/piggieback "0.2.1"]]}}
-   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]})
+  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]})

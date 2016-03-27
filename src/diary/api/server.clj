@@ -4,8 +4,12 @@
             [diary.middleware :refer [wrap-transit-body
                                       wrap-transit-response
                                       wrap-transit-params]]
-            [compojure.core :refer [defroutes ANY]]
-            [compojure.coercions :refer [as-int]]))
+            [ring.middleware.resource :refer [wrap-resource]]
+            [ring.util.response :as resp]
+            [compojure.core :refer [defroutes routes ANY GET]]
+            [compojure.coercions :refer [as-int]]
+            [com.stuartsierra.component :as component]
+            [aleph.http :as http]))
 
 
 (defn ring-response [body & [status]]
@@ -21,14 +25,37 @@
 
 
 (defroutes app
-  (ANY "/api" [] api))
+  (routes
+   (GET "/" [] (resp/redirect "/index.html"))
+   (ANY "/api" [] api)))
 
+
+(defn log-request [handler]
+  (fn [request]
+    (let [_ (println request)]
+      (handler request))))
 
 (def handler
   (-> app
       (wrap-transit-body)
-      (wrap-transit-response)))
+      (wrap-transit-response)
+      (log-request)))
 
+ (def prod-handler (wrap-resource handler "public"))
+
+
+;;=================================================================================
+;; Component
+(defrecord HTTPServer [server port handler datomic]
+  component/Lifecycle
+  (start [component]
+    (let [server (http/start-server handler {:port port})]
+      (assoc component :server server)))
+  (stop [component]
+    (.close server)))
+
+(defn prod-server [port]
+  (HTTPServer. nil port prod-handler nil))
 
 (comment
   ;;testing
