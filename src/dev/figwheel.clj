@@ -4,9 +4,8 @@
          '[com.stuartsierra.component :as component])
 
 
-(def figwheel-config {:figwheel-options
-                      {:ring-handler diary.api.server/handler
-                       :nrepl-port 4000 }
+(def figwheel-config {:figwheel-options {
+                                         :nrepl-port 4000 }
                       :build-ids ["dev"]
                       :all-builds
                       [{:id "dev"
@@ -21,22 +20,29 @@
 
 
 
-(defrecord Figwheel []
+(defrecord Figwheel [config config-factory datomic]
   component/Lifecycle
-  (start [config]
-    (ra/start-figwheel! config)
-    config)
-  (stop [config]
+  (start [component]
+    (let [config (config-factory datomic)]
+      (ra/start-figwheel! (config-factory datomic)))
+    (assoc component :config  config))
+  (stop [component]
     ;; you may want to restart other components but not Figwheel
     ;; consider commenting out this next line if that is the case
     (ra/stop-figwheel!)
-        config))
+        component))
 
 (def system
   (atom
    (component/system-map
     :datomic (diary.datomic/new-database "datomic:mem://diary")
-    :figwheel   (map->Figwheel figwheel-config))))
+    :figwheel  (component/using  (map->Figwheel {:config-factory (fn [datomic]
+                                                                   (assoc-in
+                                                                    figwheel-config
+                                                                    [:figwheel-options :ring-handler]
+                                                                    (diary.api.server/handler
+                                                                     (:connection datomic))))})
+                                 [:datomic]))))
 
 (defn start []
   (swap! system component/start))

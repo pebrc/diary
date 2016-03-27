@@ -19,7 +19,7 @@
 
 (defn api [req]
   (let [_ (println (str "request: " (:body req)))
-        resp ((om/parser {:read parser/readfn :mutate parser/mutatefn}) {} (:body req))
+        resp ((om/parser {:read parser/readfn :mutate parser/mutatefn}) {:conn (:datomic req)} (:body req))
         _ (println "response" resp)]
     (ring-response resp)))
 
@@ -30,13 +30,17 @@
    (ANY "/api" [] api)))
 
 
+(defn wrap-datomic [handler conn]
+  (fn [req] (handler (assoc req :datomic conn))))
+
 (defn log-request [handler]
   (fn [request]
     (let [_ (println request)]
       (handler request))))
 
-(def handler
+(defn handler [conn] 
   (-> app
+      (wrap-datomic conn)
       (wrap-transit-body)
       (wrap-transit-response)
       (log-request)))
@@ -49,7 +53,7 @@
 (defrecord HTTPServer [server port handler datomic]
   component/Lifecycle
   (start [component]
-    (let [server (http/start-server handler {:port port})]
+    (let [server (http/start-server (handler (:connection datomic)) {:port port})]
       (assoc component :server server)))
   (stop [component]
     (.close server)))
@@ -57,8 +61,4 @@
 (defn prod-server [port]
   (HTTPServer. nil port prod-handler nil))
 
-(comment
-  ;;testing
-  (def parse (om/parser {:read parser/readfn :mutate parser/mutatefn}))
-  (parse {} '[(entry/create {:diary.entry/text "asdf"})])
-  )
+

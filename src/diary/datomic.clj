@@ -2,7 +2,6 @@
   (:require [datomic.api :as d]
             [com.stuartsierra.component :as component]))
 
-(def db-uri "datomic:mem://diary")
 
 (def schema
   [{:db/id (d/tempid :db.part/db)
@@ -16,33 +15,25 @@
     :db/cardinality :db.cardinality/one
     :db.install/_attribute :db.part/db}])
 
-(defn create-db [uri schema]
-  (let [created (d/create-database uri)
-        conn (d/connect db-uri)]
-    (when created
-      @(d/transact conn schema))
-    conn))
-
-(def conn (create-db db-uri schema))
 
 
-(defn upsert [entry]
+(defn upsert [conn entry]
   (d/transact conn [entry]))
 
-(defn create [entry]
-  (let [ res @(upsert (assoc entry :db/id (d/tempid :db.part/user)))
+(defn create [conn entry]
+  (let [ res @(upsert conn (assoc entry :db/id (d/tempid :db.part/user)))
         _ (println res)]
     res))
 
 
-(defn by-id [id]
+(defn by-id [conn id]
   (d/pull (d/db conn) '[*] id))
 
-(defn list-entries []
+(defn list-entries [conn]
   (let [db (d/db conn)]
     (->>  (d/q '[:find [?id ...]
                 :where [?id :diary.entry/text]] (d/db conn))
-          (map by-id)
+          (map (partial  by-id conn))
           (vec))))
 
 (defrecord DatomicDatabase [uri schema initial-data connection]
@@ -52,7 +43,8 @@
     (let [c (d/connect uri)]
       @(d/transact c schema)
       (assoc component :connection c)))
-  (stop [component]))
+  (stop [component]
+    component))
 
 (defn new-database [db-uri]
   (DatomicDatabase.

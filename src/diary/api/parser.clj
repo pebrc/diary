@@ -9,12 +9,12 @@
   {:value {:error (str "no read handler for key" k)}})
 
 (defmethod readfn :entries/by-id
-  [_ _ {:keys [id]}]
-  {:value (d/by-id id)})
+  [{:keys [conn]} _ {:keys [id]}]
+  {:value (d/by-id conn id)})
 
 (defmethod readfn :entries/list
-  [_ _ _]
-  {:value (d/list-entries)})
+  [{:keys [conn]} _ _]
+  {:value (d/list-entries conn)})
 
 ;;; MUTATIONS
 (defmulti mutatefn (fn [env k params] k))
@@ -24,12 +24,12 @@
   {:value {:error (str "no mutation handler for key" k)}})
 
 (defmethod mutatefn 'entry/create
-  [_ k entry]
+  [{:keys [conn]} k entry]
   (let [_ (println entry)]
     {:value {:keys [[:entries/list]]}
-     :action (fn [] (d/create entry))}))
+     :action (fn [] (d/create conn entry))}))
 
 (defmethod mutatefn 'entry/update
-  [_ k {:keys [db/id] :as entry}]
+  [{:keys [conn]} k {:keys [db/id] :as entry}]
   {:value {:keys [[:entries/by-id id]]}
-   :action (fn [] (d/upsert entry))})
+   :action (fn [] (d/upsert conn entry))})
