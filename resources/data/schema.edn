@@ -1,11 +1,41 @@
 [
- {:db/id  #db/id[:db.part/db]
-    :db/ident :diary.entry/text
-    :db/valueType :db.type/string
-    :db/cardinality :db.cardinality/one
-    :db.install/_attribute :db.part/db}
+
+  ;;user
  {:db/id #db/id[:db.part/db]
-    :db/ident :diary.entry/date
-    :db/valueType :db.type/instant
-    :db/cardinality :db.cardinality/one
-    :db.install/_attribute :db.part/db}]
+  :db/ident :diary.user/firstname
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :diary.user/lastname
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+ :db.install/_attribute :db.part/db }
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :diary.user/password
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ ;;entry
+ {:db/id  #db/id[:db.part/db]
+  :db/ident :diary.entry/text
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :diary.entry/date
+  :db/valueType :db.type/instant
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :diarly.entry/owner
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ ]
