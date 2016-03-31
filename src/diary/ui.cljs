@@ -2,15 +2,21 @@
   (:require [clojure.string :as string]
             [goog.dom :as gdom]
             [goog.log :as glog]
+            [goog.events :as events]
+            [goog.history.EventType :as EventType]
             [goog.debug :as debug]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
             [cognitect.transit :as t]
             [diary.ui.entry :as e]
-            [diary.ui.parser :as p])
-  (:import [goog.net XhrIo]))
+            [diary.ui.parser :as p]
+            [secretary.core :as secretary :refer-macros [defroute]])
+  (:import [goog.net XhrIo]
+           goog.History))
 
 (enable-console-print!)
+
+
 
 (defn handle-response [cb]
   (fn [e]
@@ -80,6 +86,13 @@
                (apply dom/ul #js{:id "entries"}
                       (map e/item list))))))
 
+(defui SignUp
+  Object
+  (render [this]
+          (dom/div nil
+                   (dom/p nil "Create a new user"))))
+
+
 (def reconciler
   (om/reconciler
    {:state app-state
@@ -88,15 +101,24 @@
     :parser (om/parser {:read p/read
                          :mutate p/mutate})}))
 
-(defn log-state-change [k r old new]
-  ;;(print new)
-  )
 
-(add-watch app-state :debug-watch log-state-change)
+(defn mount [clazz]
+  (om/add-root! reconciler
+  clazz (gdom/getElement "app")))
 
+(defroute diary "/" []
+  (mount Diary))
 
-(om/add-root! reconciler
-  Diary (gdom/getElement "app"))
+(defroute signup "/signup" []
+  (mount SignUp))
 
+(secretary/set-config! :prefix "#")
+
+(let [history (History.)
+      navigation EventType/NAVIGATE]
+  (goog.events/listen history
+                      navigation
+                      #(-> % .-token secretary/dispatch!))
+    (doto history (.setEnabled true)))
 
 

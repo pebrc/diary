@@ -8,12 +8,13 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.8.0-RC2"]
-                 [org.clojure/clojurescript "1.7.170"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojurescript "1.8.40"]
                  [com.datomic/datomic-free "0.9.5327" :exclusions [joda-time]]
                  [com.cognitect/transit-clj "0.8.285"]
                  [com.cognitect/transit-cljs "0.8.237"]
                  [org.omcljs/om "1.0.0-alpha22"]
+                 [secretary "1.2.3"]
                  [com.stuartsierra/component "0.3.1"]
                  [aleph "0.4.1-beta4"]
                  [compojure "1.4.0"]
