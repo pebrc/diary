@@ -4,7 +4,7 @@
          '[com.stuartsierra.component :as component])
 
 
-(def figwheel-config {:figwheel-options {
+(def figwheel-config {:figwheel-options { :css-dirs ["resources/public/css"]
                                          :nrepl-port 4000 }
                       :build-ids ["dev"]
                       :all-builds

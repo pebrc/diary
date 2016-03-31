@@ -9,6 +9,7 @@
             [om.dom :as dom]
             [cognitect.transit :as t]
             [diary.ui.entry :as e]
+            [diary.ui.signup :as s]
             [diary.ui.parser :as p]
             [secretary.core :as secretary :refer-macros [defroute]])
   (:import [goog.net XhrIo]
@@ -86,11 +87,6 @@
                (apply dom/ul #js{:id "entries"}
                       (map e/item list))))))
 
-(defui SignUp
-  Object
-  (render [this]
-          (dom/div nil
-                   (dom/p nil "Create a new user"))))
 
 
 (def reconciler
@@ -109,8 +105,8 @@
 (defroute diary "/" []
   (mount Diary))
 
-(defroute signup "/signup" []
-  (mount SignUp))
+(defroute sign-up "/signup" []
+  (mount s/SignUp))
 
 (secretary/set-config! :prefix "#")
 
@@ -120,5 +116,4 @@
                       navigation
                       #(-> % .-token secretary/dispatch!))
     (doto history (.setEnabled true)))
-
 
