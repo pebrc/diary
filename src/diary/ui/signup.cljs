@@ -11,7 +11,8 @@
   (render [this]
           (dom/div #js{:className "signup"}
                    (dom/h1 nil "Create an Account")
-                   (dom/form nil
+                   (dom/form #js{:onSubmit #(doto % 
+                                              (.preventDefault))}
                              (dom/ul nil
                                      (dom/li nil
                                              (dom/label #js{:htmlFor "firstNameField"} "Firstname")
