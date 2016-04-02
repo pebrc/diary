@@ -9,6 +9,7 @@
             [om.dom :as dom]
             [cognitect.transit :as t]
             [diary.ui.entry :as e]
+            [diary.ui.messages :as m]
             [diary.ui.signup :as s]
             [diary.ui.parser :as p]
             [secretary.core :as secretary :refer-macros [defroute]])
@@ -69,12 +70,13 @@
 (defui Diary
   static om/IQuery
   (query [this]
-         `[:app/title {:entries/list ~(om/get-query e/Entry)} ])
+         `[:app/title {:entries/list ~(om/get-query e/Entry)}  {:errors ~(om/get-query m/Errors)}])
   Object
   (render [this]
           (let [props (om/props this)
-                {:keys [app/title entries/list]} props]
-      (dom/div nil
+                {:keys [app/title entries/list errors]} props]
+            (dom/div nil
+               (m/errors errors)      
                (dom/h1 nil title)
                (dom/textarea
                 #js {:ref "new-entry-input"
@@ -96,6 +98,11 @@
     :send (api-post "http://localhost:3449/api")
     :parser (om/parser {:read p/read
                          :mutate p/mutate})}))
+(defn log-state-change [k r old new]
+  (print new)
+  )
+
+(add-watch app-state :debug-watch log-state-change)
 
 
 (defn mount [clazz]

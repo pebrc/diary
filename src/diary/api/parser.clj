@@ -21,7 +21,7 @@
 
 (defmethod mutatefn :default
   [_ k _]
-  {:value {:error (str "no mutation handler for key" k)}})
+  {:value {:error (str "no mutation handler for key " k)}})
 
 (defmethod mutatefn 'entry/create
   [{:keys [conn]} k entry]

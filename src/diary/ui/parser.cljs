@@ -34,6 +34,12 @@
        (swap! state update-in ref merge new-props)))
    })
 
+(defmethod mutate 'error/ack
+  [{:keys [state]} _ ]
+  {:action
+   (fn []
+     (swap! state dissoc 'user/create))}) ;; for now...
+
 ;;=========READS ===============
 (defn join [st ref]
   (cond-> (get-in st ref)
