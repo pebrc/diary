@@ -11,11 +11,11 @@
 (defui SignUp
   static om/IQuery
   (query [this]
-         `[{user/create ~(om/get-query m/Errors)}])
+         `[{:errors ~(om/get-query m/Errors)}])
   Object
   (render [this]
           (let [props (om/props this)
-                errors (get props 'user/create)]
+                errors (get props :errors)]
             (dom/div #js{:className "signup"}
                      (m/errors errors)
                      (dom/h1 nil "Create an Account")
@@ -36,14 +36,14 @@
                                                (dom/label #js{:htmlFor "nameField"}
                                                           "Lastname")
                                                (o/input this
-                                                        [:user :lastname]
+                                                        [:user :diary.user/lastname]
                                                         {:ref "nameField"
                                                          :required true} ))
                                        (dom/li nil
                                                (dom/label #js{:htmlFor "passwordField"}
                                                           "Password")
                                                (o/input this
-                                                        [:user :password]
+                                                        [:user :diary.user/password]
                                                         {:ref "passwordField"
                                                          :type "password"
                                                          :required true}))

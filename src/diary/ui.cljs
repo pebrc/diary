@@ -19,13 +19,20 @@
 (enable-console-print!)
 
 
+(defn reshape-errors [es]
+  (let [with-ref (map (fn [[k v]]
+                        (if (map? v)
+                          (assoc v :ref k)
+                          (assoc {} :ref k :error v))) es)]
+    {:errors with-ref}))
 
 (defn handle-response [cb]
   (fn [e]
-    (let [res (.. e -target)]
+    (let [res (.. e -target)
+          data (t/read (t/reader :json) (.getResponseText res))]
       (if (.isSuccess res)
-        (cb (t/read (t/reader :json) (.getResponseText res)))
-        (cb {:app/title (.getResponseText res)})))))
+        (cb data)
+        (cb (reshape-errors data))))))
 
 (defn api-post [url]
   (fn [{:keys [remote] :as ctx} cb]

@@ -12,23 +12,29 @@
             [com.stuartsierra.component :as component]
             [aleph.http :as http]))
 
-
 (defn ring-response [body & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/transit+json"}
    :body body})
 
-(defn extract-cause [e]
-  (hash-map :error (:cause  (Throwable->map  (.getCause e))) ))
+(defn extract-cause [e errors]
+  (let [cause (:cause  (Throwable->map  (.getCause e)))
+        _ (swap! errors assoc 400 cause )]
+    (assoc {} :error cause )))
+
+(defn handle-errors [res]
+  (let [errors (atom {})
+        pretty (walk/postwalk (fn [x] (if (instance? Throwable x)
+                                 (extract-cause x errors)
+                                 x)) res)]
+    [pretty (apply max (keys @errors))]))
 
 (defn api [req]
   (let [_ (println (str "request: " (:body req)))
-        resp ((om/parser {:read parser/readfn :mutate parser/mutatefn}) {:conn (:datomic req)} (:body req))
-        resp' (walk/postwalk (fn [x] (if (instance? Throwable x)
-                                       (extract-cause x)
-                                       x) ) resp)
-        _ (println "response: " resp)]
-    (ring-response resp')))
+        resp ((om/parser {:read parser/readfn :mutate parser/mutatefn}) {:conn (:datomic req) } (:body req))
+        resp' (handle-errors resp)
+        _ (println "response: " resp')]
+    (apply ring-response resp')))
 
 
 (defroutes app

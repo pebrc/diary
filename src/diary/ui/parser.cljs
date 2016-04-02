@@ -35,10 +35,11 @@
    })
 
 (defmethod mutate 'error/ack
-  [{:keys [state]} _ ]
+  [{:keys [state]} _ {:keys [ref]} ]
   {:action
    (fn []
-     (swap! state dissoc 'user/create))}) ;; for now...
+     (swap! state update-in [:errors] (fn [es] 
+                                         (filter #(not= ref (:ref %)) es))))}) 
 
 ;;=========READS ===============
 (defn join [st ref]

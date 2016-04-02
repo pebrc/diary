@@ -16,6 +16,11 @@
   [{:keys [conn]} _ _]
   {:value (d/list-entries conn)})
 
+
+(defmethod readfn :errors
+  [{:keys [errors]} _ _ ]
+  {:value @errors})
+
 ;;; MUTATIONS
 (defmulti mutatefn (fn [env k params] k))
 
@@ -26,7 +31,7 @@
 (defmethod mutatefn 'entry/create
   [{:keys [conn]} k entry]
   (let [_ (println entry)]
-    {:value {:keys [[:entries/list]]}
+    {:value {:keys [:entries/list]}
      :action (fn [] (d/create conn entry))}))
 
 (defmethod mutatefn 'entry/update
@@ -36,5 +41,4 @@
 
 (defmethod mutatefn 'user/create
   [{:keys [conn]} _ user]
-  {:value {:keys [[:errors]]}
-   :action (fn [] (d/create conn user))})
+  {:action (fn [] (d/create conn user))})
