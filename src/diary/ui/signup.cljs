@@ -19,8 +19,10 @@
             (dom/div #js{:className "signup"}
                      (m/errors errors)
                      (dom/h1 nil "Create an Account")
-                     (dom/form #js{:onSubmit #(doto % 
-                                                (.preventDefault))}
+                     (dom/form #js{:onSubmit  (o/submit
+                                               this
+                                               :user
+                                               (fn [e] `[(user/create ~e)])) }
                                (dom/ul nil
                                        (dom/li nil
                                                (dom/label #js{:htmlFor "firstNameField"}
@@ -47,10 +49,6 @@
                                                          :required true}))
                                        (dom/li nil
                                                (dom/button #js{:type "submit"
-                                                               :className "submit"
-                                                               :onClick (o/submit
-                                                                         this
-                                                                         :user
-                                                                         (fn [e] `[(user/create ~e)]))}
+                                                               :className "submit"}
                                                            "Create an Account"))))))
           ))
