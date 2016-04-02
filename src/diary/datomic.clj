@@ -5,6 +5,9 @@
   (:import datomic.Util))
 
 
+(defn upsert [conn entry]
+  (d/transact conn [entry]))
+
 (defn create [conn entry]
   (let [ res @(upsert conn (assoc entry :db/id (d/tempid :db.part/user)))
         _ (println res)]
