@@ -17,10 +17,6 @@
   {:value (d/list-entries conn)})
 
 
-(defmethod readfn :errors
-  [{:keys [errors]} _ _ ]
-  {:value @errors})
-
 ;;; MUTATIONS
 (defmulti mutatefn (fn [env k params] k))
 

@@ -28,7 +28,7 @@
                                                (dom/label #js{:htmlFor "firstNameField"}
                                                           "Firstname")
                                                (o/input this
-                                                        [:user :firstname]
+                                                        [:user :diary.user/firstname]
                                                         {:ref "firstNameField"
                                                          :name "firstNameField"
                                                          :required true} ))

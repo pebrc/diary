@@ -27,7 +27,7 @@
         pretty (walk/postwalk (fn [x] (if (instance? Throwable x)
                                  (extract-cause x errors)
                                  x)) res)]
-    [pretty (apply max (keys @errors))]))
+    [pretty (apply max 200 (keys @errors))]))
 
 (defn api [req]
   (let [_ (println (str "request: " (:body req)))
