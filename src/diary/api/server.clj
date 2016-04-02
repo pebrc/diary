@@ -1,5 +1,6 @@
 (ns diary.api.server
-  (:require [om.next.server :as om]
+  (:require [clojure.walk :as walk]
+            [om.next.server :as om]
             [diary.api.parser :as parser]
             [diary.middleware :refer [wrap-transit-body
                                       wrap-transit-response
@@ -17,11 +18,17 @@
    :headers {"Content-Type" "application/transit+json"}
    :body body})
 
+(defn extract-cause [e]
+  (hash-map :error (:cause  (Throwable->map  (.getCause e))) ))
+
 (defn api [req]
   (let [_ (println (str "request: " (:body req)))
         resp ((om/parser {:read parser/readfn :mutate parser/mutatefn}) {:conn (:datomic req)} (:body req))
-        _ (println "response" resp)]
-    (ring-response resp)))
+        resp' (walk/postwalk (fn [x] (if (instance? Throwable x)
+                                       (extract-cause x)
+                                       x) ) resp)
+        _ (println "response: " resp)]
+    (ring-response resp')))
 
 
 (defroutes app

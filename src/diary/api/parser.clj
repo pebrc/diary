@@ -33,3 +33,8 @@
   [{:keys [conn]} k {:keys [db/id] :as entry}]
   {:value {:keys [[:entries/by-id id]]}
    :action (fn [] (d/upsert conn entry))})
+
+(defmethod mutatefn 'user/create
+  [{:keys [conn]} _ user]
+  {:value {:keys [[:errors]]}
+   :action (fn [] (d/create conn user))})

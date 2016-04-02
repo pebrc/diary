@@ -1,16 +1,24 @@
 (ns diary.datomic
   (:require [datomic.api :as d]
             [com.stuartsierra.component :as component]
-            [clojure.java.io :as io])
-  (:import datomic.Util))
+            [clojure.java.io :as io]
+            [manifold.deferred :as m])
+  (:import datomic.Util
+           java.util.concurrent.ExecutionException))
+
+(defn extract-cause [e]
+  (hash-map :error (:cause  (Throwable->map  (.getCause e))) ))
 
 
 (defn upsert [conn entry]
   (d/transact conn [entry]))
 
 (defn create [conn entry]
-  (let [ res @(upsert conn (assoc entry :db/id (d/tempid :db.part/user)))
-        _ (println res)]
+  (let [;;res ;; @(-> (m/->deferred
+            ;;      (upsert conn (assoc entry :db/id (d/tempid :db.part/user))))
+            ;;      (m/catch ExecutionException extract-cause))
+        res @(upsert conn (assoc entry :db/id (d/tempid :db.part/user)))
+        _ (println "datomic create" res)]
     res))
 
 

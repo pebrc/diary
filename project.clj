@@ -15,6 +15,7 @@
                  [org.omcljs/om "1.0.0-alpha22"]
                  [secretary "1.2.3"]
                  [com.stuartsierra/component "0.3.1"]
+                 [manifold "0.1.3"]
                  [aleph "0.4.1-beta4"]
                  [compojure "1.4.0"]
                  [ring/ring-core "1.4.0"]]

@@ -87,9 +87,11 @@ default-malformed-response
   (let [{:keys [encoding opts] :or {encoding :json}} options]
     (assert (#{:json :json-verbose :msgpack} encoding) "The encoding must be one of #{:json :json-verbose :msgpack}.")
     (fn [request]
-      (let [response (handler request)]
+      (let [response (handler request)
+            _ (println response)]
         (if (coll? (:body response))
-          (let [transit-response (update-in response [:body] write encoding opts)]
+          (let [transit-response (update-in response [:body] write encoding opts)
+                _ (println transit-response)]
             (if (contains? (:headers response) "Content-Type")
               transit-response
               (content-type transit-response (format "application/transit+%s; charset=utf-8" (name encoding)))))
